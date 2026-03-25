@@ -9,6 +9,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from src.services.flow_service import load_flow_config
+from src.routes.users import router as users_router
+from src.routes.flow import router as flow_router
+from src.routes.tasks import router as tasks_router
 
 
 @asynccontextmanager
@@ -19,3 +22,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Admissions System API", lifespan=lifespan)
+
+app.include_router(users_router)
+app.include_router(flow_router)
+app.include_router(tasks_router)
