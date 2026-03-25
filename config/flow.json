@@ -1,0 +1,52 @@
+[
+  {
+    "id": "personal_details",
+    "name": "Personal Details Form",
+    "order": 1,
+    "tasks": [
+      { "id": "personal_details", "name": "Personal Details Form", "order": 1, "pass_condition": "always" }
+    ]
+  },
+  {
+    "id": "iq_test",
+    "name": "IQ Test",
+    "order": 2,
+    "tasks": [
+      { "id": "iq_test", "name": "IQ Test", "order": 1, "pass_condition": "score_gt_75" }
+    ]
+  },
+  {
+    "id": "interview",
+    "name": "Interview",
+    "order": 3,
+    "tasks": [
+      { "id": "schedule_interview", "name": "Schedule Interview", "order": 1, "pass_condition": "always" },
+      { "id": "perform_interview", "name": "Perform Interview", "order": 2, "pass_condition": "decision_passed" }
+    ]
+  },
+  {
+    "id": "sign_contract",
+    "name": "Sign Contract",
+    "order": 4,
+    "tasks": [
+      { "id": "upload_id", "name": "Upload Identification Document", "order": 1, "pass_condition": "always" },
+      { "id": "sign_contract", "name": "Sign the Contract", "order": 2, "pass_condition": "always" }
+    ]
+  },
+  {
+    "id": "payment",
+    "name": "Payment",
+    "order": 5,
+    "tasks": [
+      { "id": "payment", "name": "Payment", "order": 1, "pass_condition": "always" }
+    ]
+  },
+  {
+    "id": "join_slack",
+    "name": "Join Slack",
+    "order": 6,
+    "tasks": [
+      { "id": "join_slack", "name": "Join Slack", "order": 1, "pass_condition": "always" }
+    ]
+  }
+]
