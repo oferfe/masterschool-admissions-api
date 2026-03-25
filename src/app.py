@@ -2,13 +2,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from src.services.flow_service import load_flow_config
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: load flow config into the in-memory store
-    # (will be wired in Phase 3)
+    load_flow_config()
     yield
-    # Shutdown: nothing to clean up for in-memory storage
 
 
 app = FastAPI(title="Admissions System API", lifespan=lifespan)
