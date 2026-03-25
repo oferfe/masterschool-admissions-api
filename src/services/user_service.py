@@ -1,3 +1,10 @@
+"""User service — creation, progress resolution, and outcome retrieval.
+
+Handles all user-scoped business logic: registering new users,
+computing where a user stands in the admissions flow, and returning
+their final admission status.
+"""
+
 import uuid
 from datetime import datetime, timezone
 
@@ -9,6 +16,20 @@ from src.services.flow_service import get_steps_in_order, get_tasks_for_step
 
 
 def create_user(email: str) -> str:
+    """Register a new user and initialise their task statuses.
+
+    Creates a User with status "in_progress" and a pending
+    UserTaskStatus for every non-conditional task in the flow.
+
+    Args:
+        email: The user's email address (must be unique).
+
+    Returns:
+        The newly generated user ID (UUID string).
+
+    Raises:
+        HTTPException 409: If the email is already registered.
+    """
     for user in store.users.values():
         if user.email == email:
             raise HTTPException(status_code=409, detail="Email already exists")
@@ -32,6 +53,11 @@ def create_user(email: str) -> str:
 
 
 def get_user(user_id: str) -> User:
+    """Look up a user by ID.
+
+    Raises:
+        HTTPException 404: If the user does not exist.
+    """
     user = store.users.get(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -39,6 +65,18 @@ def get_user(user_id: str) -> User:
 
 
 def get_user_progress(user_id: str) -> dict:
+    """Compute the user's current position in the admissions flow.
+
+    Walks steps in order. The current step is the first step whose
+    non-conditional tasks are not all passed. Conditional tasks are
+    excluded from total_steps counting.
+
+    Returns a dict with keys: current_step, current_task,
+    completed_steps, step_number, total_steps.
+
+    Raises:
+        HTTPException 404: If the user does not exist.
+    """
     user = get_user(user_id)
 
     steps = get_steps_in_order()
@@ -76,5 +114,10 @@ def get_user_progress(user_id: str) -> dict:
 
 
 def get_user_outcome(user_id: str) -> str:
+    """Return the user's admission status ("in_progress", "accepted", or "rejected").
+
+    Raises:
+        HTTPException 404: If the user does not exist.
+    """
     user = get_user(user_id)
     return user.status
