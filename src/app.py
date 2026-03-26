@@ -26,3 +26,11 @@ app = FastAPI(title="Admissions System API", lifespan=lifespan)
 app.include_router(users_router)
 app.include_router(flow_router)
 app.include_router(tasks_router)
+
+@app.get("/")
+async def root():
+    """Root endpoint to verify the API is running."""
+    return {
+        "message": "Welcome to the Admissions System API!",
+        "hint": "Visit /docs to see the API documentation and test endpoints."
+    }

@@ -208,9 +208,12 @@ class TestAllRequiredTasksPassed:
         for key, status in store.user_task_statuses.items():
             if key[0] == user_id:
                 status.state = "passed"
-        conditional_status = UserTaskStatus(user_id=user_id, task_id="conditional_task")
-        store.user_task_statuses[(user_id, "conditional_task")] = conditional_status
-        store.tasks["conditional_task"] = store.tasks["iq_test"].model_copy(
+        conditional_task = store.tasks["iq_test"].model_copy(
             update={"id": "conditional_task", "conditional": True}
         )
+        store.tasks["conditional_task"] = conditional_task
+        target_step = store.flow_steps[0]
+        target_step.tasks.append(conditional_task)
+        conditional_status = UserTaskStatus(user_id=user_id, task_id="conditional_task")
+        store.user_task_statuses[(user_id, "conditional_task")] = conditional_status
         assert _all_required_tasks_passed(user_id) is False
