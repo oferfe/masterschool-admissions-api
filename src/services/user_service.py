@@ -16,7 +16,7 @@ from src.services.flow_service import get_steps_in_order, get_tasks_for_step
 
 
 def create_user(email: str) -> str:
-    """Register a new user and initialise their task statuses.
+    """Register a new user and initialize their task statuses.
 
     Creates a User with status "in_progress" and a pending
     UserTaskStatus for every non-conditional task in the flow.
@@ -67,9 +67,10 @@ def get_user(user_id: str) -> User:
 def get_user_progress(user_id: str) -> dict:
     """Compute the user's current position in the admissions flow.
 
-    Walks steps in order. The current step is the first step whose
-    non-conditional tasks are not all passed. Conditional tasks are
-    excluded from total_steps counting.
+    Walks steps in order. The current step is the first step that has
+    at least one relevant pending task. A task is relevant if it is
+    non-conditional, or if it is conditional and has been unlocked for
+    this user (i.e. a UserTaskStatus entry exists).
 
     Returns a dict with keys: current_step, current_task,
     completed_steps, step_number, total_steps.
@@ -77,7 +78,7 @@ def get_user_progress(user_id: str) -> dict:
     Raises:
         HTTPException 404: If the user does not exist.
     """
-    user = get_user(user_id)
+    get_user(user_id)
 
     steps = get_steps_in_order()
     completed_steps: list[str] = []
@@ -86,10 +87,14 @@ def get_user_progress(user_id: str) -> dict:
 
     for step in steps:
         tasks = get_tasks_for_step(step.id)
-        non_conditional_tasks = [t for t in tasks if not t.conditional]
+        relevant_tasks = [
+            t for t in tasks
+            if not t.conditional
+            or (user_id, t.id) in store.user_task_statuses
+        ]
 
         all_passed = True
-        for task in non_conditional_tasks:
+        for task in relevant_tasks:
             status = store.user_task_statuses.get((user_id, task.id))
             if not status or status.state != "passed":
                 all_passed = False
