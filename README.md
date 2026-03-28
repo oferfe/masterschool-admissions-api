@@ -130,7 +130,7 @@ Key fields:
 - `conditional: true` — hidden from the default flow, not seeded at user creation.
 - `unlock_when` — the condition key evaluated against the payload to decide whether to unlock this task.
 
-**Step 2** — Add the unlock condition to `src/evaluators/unlock_condition.py`:
+**Step 2** - Add the unlock condition to `src/evaluators/unlock_condition.py`:
 
 ```python
 match unlock_when:
