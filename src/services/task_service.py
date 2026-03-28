@@ -26,10 +26,11 @@ def complete_task(user_id: str, task_id: str, payload: dict) -> str:
         2. Validate task exists and is available for the user.
         3. If already passed, return passed.
         4. Evaluate pass condition against the payload.
-        5. Try to unlock any conditional tasks whose conditions are met.
-        6. On failure: reject the user only if no conditional task was
+        5. Check that the task is the first pending task in the correct flow order.
+        6. Try to unlock any conditional tasks whose conditions are met.
+        7. On failure: reject the user only if no conditional task was
            unlocked (i.e., no second-chance path is available).
-        7. On success: check if all tasks are passed (→ accepted).
+        8. On success: check if all tasks are passed (→ accepted).
 
     Args:
         user_id: The user completing the task.
@@ -60,6 +61,13 @@ def complete_task(user_id: str, task_id: str, payload: dict) -> str:
 
     if task_status.state == "passed":
         return task_status.state
+    
+    expected_task_id = _get_first_pending_task(user_id)
+    if expected_task_id and task_id != expected_task_id:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Tasks must be completed in order. Please complete '{expected_task_id}' first."
+        )
 
     result = evaluate(task.pass_condition, payload)
     now = datetime.now(timezone.utc)
@@ -78,6 +86,18 @@ def complete_task(user_id: str, task_id: str, payload: dict) -> str:
         user.status = "accepted"
 
     return result
+
+def _get_first_pending_task(user_id: str) -> str | None:
+    """Finds the first pending task for the user in the correct flow order.
+    
+    Returns the task ID if found, None otherwise.
+    """
+    for step in get_steps_in_order():
+        for task in get_tasks_for_step(step.id):
+            status = store.user_task_statuses.get((user_id, task.id))
+            if status and status.state == "pending":
+                return task.id
+    return None
 
 
 def _try_unlock_conditional_tasks(user_id: str, payload: dict) -> bool:
