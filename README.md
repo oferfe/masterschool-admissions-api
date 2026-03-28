@@ -38,7 +38,11 @@ The flow is defined in `config/flow.json` and consists of 6 sequential steps:
 |------|---------|----------------|
 | 1. Personal Details | `personal_details` | Always passes |
 | 2. IQ Test | `iq_test` | Score > 75 |
+<<<<<<< HEAD
 | | `retake_iq` *(conditional)* | Score > 75 - unlocked if initial score is 60–75 |
+=======
+| | `retake_iq` *(conditional)* | Score > 75 - unlocked if initial score is 60-75 |
+>>>>>>> 951a3a8f17a5fa833b1507cff32f397706a20af2
 | 3. Interview | `schedule_interview` | Always passes |
 | | `perform_interview` | Decision = `"passed_interview"` |
 | 4. Sign Contract | `upload_id` | Always passes |
@@ -46,7 +50,7 @@ The flow is defined in `config/flow.json` and consists of 6 sequential steps:
 | 5. Payment | `payment` | Always passes |
 | 6. Join Slack | `join_slack` | Always passes |
 
-- Failing a task **rejects** the user — unless a conditional task is unlocked as a second chance (see [Extending the Flow](#extending-the-flow)).
+- Failing a task **rejects** the user - unless a conditional task is unlocked as a second chance (see [Extending the Flow](#extending-the-flow)).
 - Passing all tasks **accepts** the user.
 
 ## Architecture
@@ -90,7 +94,7 @@ Add a task entry to the relevant step in `config/flow.json`:
 { "id": "background_check", "name": "Background Check", "order": 2, "pass_condition": "always" }
 ```
 
-That's it — the task will appear in the flow and users will need to complete it.
+That's it - the task will appear in the flow and users will need to complete it.
 
 ### Adding a new pass condition
 
@@ -112,7 +116,7 @@ case "score_gt_90":
 
 Conditional tasks are hidden by default and only unlocked for specific users based on runtime data. For example, to add a "Retake IQ Test" task for users who score between 60 and 75:
 
-**Step 1** — Add the conditional task to `config/flow.json` inside the relevant step:
+**Step 1** - Add the conditional task to `config/flow.json` inside the relevant step:
 
 ```json
 {
@@ -121,7 +125,7 @@ Conditional tasks are hidden by default and only unlocked for specific users bas
   "order": 2,
   "tasks": [
     { "id": "iq_test", "name": "IQ Test", "order": 1, "pass_condition": "score_gt_75" },
-    { "id": "retake_iq", "name": "Retake IQ Test", "order": 2, "pass_condition": "score_gt_75", "conditional": true, "unlock_when": "score_between_60_75" }
+    { "id": "retake_iq", "name": "Retake IQ Test", "order": 2, "pass_condition": "score_between_60_75", "conditional": true, "unlock_when": "score_between_60_75" }
   ]
 }
 ```
@@ -130,7 +134,7 @@ Key fields:
 - `conditional: true` — hidden from the default flow, not seeded at user creation.
 - `unlock_when` — the condition key evaluated against the payload to decide whether to unlock this task.
 
-**Step 2** — Add the unlock condition to `src/evaluators/unlock_condition.py`:
+**Step 2** - Add the unlock condition to `src/evaluators/unlock_condition.py`:
 
 ```python
 match unlock_when:
