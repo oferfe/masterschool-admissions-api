@@ -46,7 +46,7 @@ The flow is defined in `config/flow.json` and consists of 6 sequential steps:
 | 5. Payment | `payment` | Always passes |
 | 6. Join Slack | `join_slack` | Always passes |
 
-- Failing a task **rejects** the user — unless a conditional task is unlocked as a second chance (see [Extending the Flow](#extending-the-flow)).
+- Failing a task **rejects** the user - unless a conditional task is unlocked as a second chance (see [Extending the Flow](#extending-the-flow)).
 - Passing all tasks **accepts** the user.
 
 ## Architecture
@@ -90,7 +90,7 @@ Add a task entry to the relevant step in `config/flow.json`:
 { "id": "background_check", "name": "Background Check", "order": 2, "pass_condition": "always" }
 ```
 
-That's it — the task will appear in the flow and users will need to complete it.
+That's it - the task will appear in the flow and users will need to complete it.
 
 ### Adding a new pass condition
 
@@ -112,7 +112,7 @@ case "score_gt_90":
 
 Conditional tasks are hidden by default and only unlocked for specific users based on runtime data. For example, to add a "Retake IQ Test" task for users who score between 60 and 75:
 
-**Step 1** — Add the conditional task to `config/flow.json` inside the relevant step:
+**Step 1** - Add the conditional task to `config/flow.json` inside the relevant step:
 
 ```json
 {
@@ -121,7 +121,7 @@ Conditional tasks are hidden by default and only unlocked for specific users bas
   "order": 2,
   "tasks": [
     { "id": "iq_test", "name": "IQ Test", "order": 1, "pass_condition": "score_gt_75" },
-    { "id": "retake_iq", "name": "Retake IQ Test", "order": 2, "pass_condition": "score_gt_75", "conditional": true, "unlock_when": "score_between_60_75" }
+    { "id": "retake_iq", "name": "Retake IQ Test", "order": 2, "pass_condition": "score_between_60_75", "conditional": true, "unlock_when": "score_between_60_75" }
   ]
 }
 ```
