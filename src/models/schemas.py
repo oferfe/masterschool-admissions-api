@@ -8,7 +8,7 @@ Defines four categories of schemas:
 """
 
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 # ---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ class Task(BaseModel):
                      this conditional task (e.g. "score_between_60_75").
     """
     id: str
-    step_id: str = ""
+    step_id: str
     name: str
     order: int
     pass_condition: str
@@ -51,7 +51,7 @@ class FlowStep(BaseModel):
     id: str
     name: str
     order: int
-    tasks: list[Task] = []
+    tasks: list[Task] = Field(min_length=1)
 
 
 # ---------------------------------------------------------------------------
