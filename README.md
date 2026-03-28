@@ -153,8 +153,8 @@ If no conditional task is unlocked on failure (e.g., score < 60), the user is re
 
 ## Assumptions
 
-1. **Sequential flow**: The admissions flow is designed to be completed in order (step 1 before step 2, etc.). The system enforces this at the API level, returning an error with an informative message if a candidate attempts to skip a required task.
-2. **In-memory storage is acceptable**: The system is designed such that all data lives in memory and is lost on restart.
+1. **Sequential flow**: The admissions flow is designed to be completed in order (step 1 before step 2, etc.). The system enforces this at the API level, returning an error with an informative message if a candidate attempts to skip a required task. I know that saving data in the server's memory means it will be erased if the server restarts. It also makes it hard to run multiple servers at the same time. In a real-world app, I would replace this with a real database (like PostgreSQL) to save the data permanently. Even though reading from a Python dictionary is instant, I wrote the functions as `async`. I did this on purpose so that when the app eventually connects to a real database (which takes time to load data), the code is already prepared for it.
+2. **In-memory storage is acceptable**: The system is designed such that all data lives in memory and is lost on restart. 
 3. **Flow config is static at runtime**: The flow is loaded once from `config/flow.json` at startup and does not change while the server is running.
 
 ## Design Choices
