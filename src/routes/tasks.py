@@ -27,8 +27,8 @@ async def put_complete_task(
                 },
             },
             "iq_test": {
-                "summary": "IQ Test (score > 75 to pass)",
-                "description": "Step 2 — submit test results. Passed when score > 75.",
+                "summary": "IQ Test",
+                "description": "Step 2a — submit test results. Passed when score > 75. if score between 60 and 75, the user can retake the test.",
                 "value": {
                     "test_id": "t1",
                     "score": 80,
