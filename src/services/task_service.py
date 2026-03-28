@@ -126,18 +126,30 @@ def _try_unlock_conditional_tasks(user_id: str, payload: dict) -> bool:
 
 
 def _all_required_tasks_passed(user_id: str) -> bool:
-    """Check whether every task assigned to the user is in "passed" state.
+    """Check whether every step assigned to the user is satisfied.
 
-    Conditional tasks that were never unlocked are skipped (they are
-    not required). Unlocked conditional tasks must also be passed.
+    A step is satisfied when one of the following is true for each task:
+    - The task is passed.
+    - The task is a conditional task that was never unlocked (not required).
+    - The task failed, but a conditional task in the same step was passed
+      (second-chance pattern).
     """
     for step in get_steps_in_order():
-        for task in get_tasks_for_step(step.id):
-            if task.conditional:
-                status = store.user_task_statuses.get((user_id, task.id))
-                if not status:
-                    continue
+        tasks = get_tasks_for_step(step.id)
+
+        has_passed_conditional = any(
+            t.conditional
+            and store.user_task_statuses.get((user_id, t.id))
+            and store.user_task_statuses[(user_id, t.id)].state == "passed"
+            for t in tasks
+        )
+
+        for task in tasks:
             status = store.user_task_statuses.get((user_id, task.id))
+            if task.conditional and not status:
+                continue
             if not status or status.state != "passed":
+                if status and status.state == "failed" and has_passed_conditional:
+                    continue
                 return False
     return True
