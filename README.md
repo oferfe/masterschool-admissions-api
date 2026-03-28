@@ -38,7 +38,7 @@ The flow is defined in `config/flow.json` and consists of 6 sequential steps:
 |------|---------|----------------|
 | 1. Personal Details | `personal_details` | Always passes |
 | 2. IQ Test | `iq_test` | Score > 75 |
-| | `retake_iq` *(conditional)* | Score > 75 — unlocked if initial score is 60–75 |
+| | `retake_iq` *(conditional)* | Score > 75 - unlocked if initial score is 60–75 |
 | 3. Interview | `schedule_interview` | Always passes |
 | | `perform_interview` | Decision = `"passed_interview"` |
 | 4. Sign Contract | `upload_id` | Always passes |
@@ -166,30 +166,27 @@ If no conditional task is unlocked on failure (e.g., score < 60), the user is re
 4. **Conditional tasks are lazily unlocked**: Conditional tasks are not seeded at user creation because they only apply to specific users based on runtime data. This avoids cluttering every user's task list with irrelevant tasks.
 5. **Two-endpoint frontend pattern**: `GET /flow` returns the general flow definition (shared across all users) for displaying the overall structure and step names. `GET /users/{id}/progress` returns user-specific progress, including which step and task the user is currently on and any unlocked conditional tasks. A frontend combines both: `/flow` for the layout, `/progress` for highlighting the user's current position.
 
-## Known Limitations
+## Known Limitations & Future Improvements
 
-### 1. In-Memory Store — No Persistence
-All data (users, task statuses, flow config) lives in memory. Restarting the server **wipes everything**. There is no database — the store is a plain Python object (`src/db/store.py`).
+This section outlines the current compromises made for simplicity and the planned architectural upgrades for a production-ready environment.
 
-### 2. No Migration Strategy for Flow Updates
-There is no mechanism to reconcile existing users' task statuses when the flow changes. In a production system with a persistent database, a migration job would be needed to seed missing task statuses for existing in-progress users whenever the flow is updated.
+### 1. Data Persistence
+* **Limitation:** All data (users, task statuses, flow config) currently lives in an in-memory store (`src/db/store.py`). Restarting the server wipes all progress.
+* **Future Improvement:** Replace the in-memory store with a persistent database (e.g., PostgreSQL with SQLAlchemy) to ensure data durability across server restarts.
 
-### 3. The "Conditional-Only Step" Edge Case
-The schema enforces that every step must contain at least one task (`min_length=1`). However, if a step contains **only** conditional tasks, there is still a risk: if a user fails to unlock any of them, the step effectively becomes empty for that user and the system's logic defaults to `all_passed = True`, automatically marking the step as completed.
+### 2. Payload Validation & Type Safety
+* **Limitation:** The `PUT /users/{id}/tasks/{task_id}` webhook accepts a generic `dict` body. Missing fields cause silent failures (e.g., a missing `score` defaults to `0`, resulting in immediate rejection) without returning clear validation errors to the client.
+* **Future Improvement:** Implement strict payload validation using typed Pydantic models per task type (with `extra='forbid'`). This will prevent payload pollution and return clear `422 Unprocessable Entity` errors for invalid inputs.
 
-Our current `flow.json` safely prevents this by including at least one mandatory (non-conditional) task per step to act as an anchor. Future configurations must maintain this pattern to ensure users aren't skipped ahead unintentionally.
+### 3. Flow Updates & Migrations
+* **Limitation:** There is no mechanism to reconcile existing users' task statuses if `config/flow.json` is modified while users are midway through the flow.
+* **Future Improvement:** Develop a flow migration strategy to seamlessly update existing in-progress users when the blueprint changes (e.g., seeding missing statuses for new tasks or cleaning up orphaned ones).
 
-### 4. Untyped Task Payloads — Examples Only, No Validation
-The `PUT /users/{user_id}/tasks/{task_id}` endpoint accepts a generic `dict` body. Swagger UI provides a dropdown with example payloads for each task type (select from the "Examples" dropdown to see the expected fields), but these are **documentation only**. The server does not enforce required fields or validate the payload structure — any JSON object is accepted.
+### 4. Fully Data-Driven Evaluators
+* **Limitation:** Currently, adding a new pass or unlock condition requires modifying the `match/case` branches in the Python evaluator files.
+* **Future Improvement:** Implement generic pass conditions evaluated dynamically directly from `flow.json` (e.g., `{"field": "score", "operator": ">", "value": 75}`). This would make the system 100% config-driven, eliminating the need for any Python code changes when introducing new rules.
 
-Missing fields cause **silent failures**: a missing `score` defaults to `0` (which fails the `> 75` check), and a missing `decision` defaults to `None` (which fails the `== "passed_interview"` check). In both cases the user is **permanently rejected** with no validation error explaining what went wrong.
-
-For simplicity, the webhook accepts data as a flexible `dict`. In a production environment, strict Pydantic models with `extra='forbid'` should be used for each task type to prevent payload pollution and enforce strict input validation.
-
-## Future Improvements
-
-1. **Persistent database** — Replace the in-memory store with a database (e.g., PostgreSQL with SQLAlchemy) so data survives restarts.
-2. **Flow migration strategy** — A mechanism to reconcile existing users' task statuses when `flow.json` changes (seed missing statuses, clean up orphaned ones).
-3. **Strict payload validation** — Typed Pydantic models per task type with `extra='forbid'` to enforce required fields and return clear 422 errors on invalid input.
-4. **Generic pass conditions** — The current pass condition evaluator uses hardcoded `match/case` branches. A more extensible approach would define conditions in `flow.json` as generic expressions (e.g., `{"field": "score", "operator": ">", "value": 75}`), allowing new conditions to be added via config without writing Python code.
+### 5. The "Conditional-Only Step" Edge Case
+* **Limitation:** If a flow step contains *only* conditional tasks and a user fails to unlock any of them, the system logic defaults to `all_passed = True`, effectively skipping the step and pushing the user forward unintentionally.
+* **Mitigation & Future Fix:** The current `flow.json` safely prevents this by including at least one mandatory (non-conditional) task per step to act as an anchor. In the future, a startup validation script should be added to explicitly reject flow configurations that contain steps without mandatory tasks.
 
