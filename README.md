@@ -38,11 +38,7 @@ The flow is defined in `config/flow.json` and consists of 6 sequential steps:
 |------|---------|----------------|
 | 1. Personal Details | `personal_details` | Always passes |
 | 2. IQ Test | `iq_test` | Score > 75 |
-<<<<<<< HEAD
-| | `retake_iq` *(conditional)* | Score > 75 - unlocked if initial score is 60–75 |
-=======
 | | `retake_iq` *(conditional)* | Score > 75 - unlocked if initial score is 60-75 |
->>>>>>> 951a3a8f17a5fa833b1507cff32f397706a20af2
 | 3. Interview | `schedule_interview` | Always passes |
 | | `perform_interview` | Decision = `"passed_interview"` |
 | 4. Sign Contract | `upload_id` | Always passes |
