@@ -13,19 +13,82 @@ router = APIRouter()
 async def put_complete_task(
     user_id: str,
     task_id: str,
-    payload: Optional[dict] = Body(default=None),
+    payload: Optional[dict] = Body(
+        default=None,
+        openapi_examples={
+            "personal_details": {
+                "summary": "Personal Details Form",
+                "description": "Step 1 — submit personal information.",
+                "value": {
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "email": "john.doe@example.com",
+                    "timestamp": "2026-03-27T12:00:00Z",
+                },
+            },
+            "iq_test": {
+                "summary": "IQ Test (score > 75 to pass)",
+                "description": "Step 2 — submit test results. Passed when score > 75.",
+                "value": {
+                    "test_id": "t1",
+                    "score": 80,
+                    "timestamp": "2026-03-27T12:00:00Z",
+                },
+            },
+            "schedule_interview": {
+                "summary": "Schedule Interview",
+                "description": "Step 3a — schedule an interview date.",
+                "value": {
+                    "interview_date": "2026-04-15",
+                },
+            },
+            "perform_interview": {
+                "summary": "Perform Interview (decision = 'passed_interview' to pass)",
+                "description": "Step 3b — submit interview result. Passed when decision is 'passed_interview'.",
+                "value": {
+                    "interview_date": "2026-04-15",
+                    "interviewer_id": "i1",
+                    "decision": "passed_interview",
+                },
+            },
+            "upload_id": {
+                "summary": "Upload Identification Document",
+                "description": "Step 4a — upload passport or ID.",
+                "value": {
+                    "passport_number": "AB1234567",
+                    "timestamp": "2026-03-27T12:00:00Z",
+                },
+            },
+            "sign_contract": {
+                "summary": "Sign Contract",
+                "description": "Step 4b — sign the admission contract.",
+                "value": {
+                    "timestamp": "2026-03-27T12:00:00Z",
+                },
+            },
+            "payment": {
+                "summary": "Payment",
+                "description": "Step 5 — submit payment confirmation.",
+                "value": {
+                    "payment_id": "p1",
+                    "timestamp": "2026-03-27T12:00:00Z",
+                },
+            },
+            "join_slack": {
+                "summary": "Join Slack",
+                "description": "Step 6 — confirm Slack workspace membership.",
+                "value": {
+                    "email": "john.doe@example.com",
+                    "timestamp": "2026-03-27T12:00:00Z",
+                },
+            },
+        },
+    ),
 ):
     """Mark a task as complete. Acts as the incoming webhook handler.
 
-    The request body is the raw task payload (varies per task type)
-    and is passed directly to the pass condition evaluator.
-    An empty body is accepted for tasks with an "always" pass condition.
-
-    Example payloads:
-        Personal details: {"first_name": "A", "last_name": "B", "email": "a@b.com", "timestamp": "..."}
-        IQ test:          {"test_id": "t1", "score": 80, "timestamp": "..."}
-        Interview:        {"interview_date": "...", "interviewer_id": "i1", "decision": "passed_interview"}
-        Payment:          {"payment_id": "p1", "timestamp": "..."}
+    The request body varies per task type — use the example dropdown
+    in Swagger UI to see the expected payload for each task.
     """
     if payload is None:
         payload = {}
