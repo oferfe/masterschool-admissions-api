@@ -9,8 +9,16 @@ from src.models.schemas import (
     ProgressResponse,
     StepSummary,
     TaskInfoResponse,
+    UserFlowResponse,
+    UserStepInfoResponse,
+    UserTaskInfoResponse,
 )
-from src.services.user_service import create_user, get_user_progress, get_user_outcome
+from src.services.user_service import (
+    create_user,
+    get_user_flow,
+    get_user_progress,
+    get_user_outcome,
+)
 
 router = APIRouter()
 
@@ -44,6 +52,31 @@ def get_progress(user_id: str):
         step_number=progress["step_number"],
         total_steps=progress["total_steps"],
     )
+
+
+@router.get("/users/{user_id}/flow", response_model=UserFlowResponse)
+def get_user_flow_definition(user_id: str):
+    """Return the personalized flow for a specific user.
+
+    Includes all non-conditional tasks and any conditional tasks that
+    have been unlocked for this user, each with its current state.
+    """
+    steps = get_user_flow(user_id)
+
+    step_responses = [
+        UserStepInfoResponse(
+            id=s["id"],
+            name=s["name"],
+            order=s["order"],
+            tasks=[
+                UserTaskInfoResponse(id=t["id"], name=t["name"], order=t["order"], state=t["state"])
+                for t in s["tasks"]
+            ],
+        )
+        for s in steps
+    ]
+
+    return UserFlowResponse(total_steps=len(step_responses), steps=step_responses)
 
 
 @router.get("/users/{user_id}/outcome", response_model=OutcomeResponse)

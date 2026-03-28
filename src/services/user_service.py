@@ -115,6 +115,40 @@ def get_user_progress(user_id: str) -> dict:
     }
 
 
+def get_user_flow(user_id: str) -> list[dict]:
+    """Build a personalized flow for the user, including unlocked conditional tasks.
+
+    Returns a list of step dicts, each containing the step info and a list
+    of tasks relevant to this user with their current state.
+
+    Raises:
+        HTTPException 404: If the user does not exist.
+    """
+    get_user(user_id)
+
+    result = []
+    for step in get_steps_in_order():
+        tasks = []
+        for task in get_tasks_for_step(step.id):
+            status = store.user_task_statuses.get((user_id, task.id))
+            if not status:
+                continue
+            tasks.append({
+                "id": task.id,
+                "name": task.name,
+                "order": task.order,
+                "state": status.state,
+            })
+        result.append({
+            "id": step.id,
+            "name": step.name,
+            "order": step.order,
+            "tasks": tasks,
+        })
+
+    return result
+
+
 def get_user_outcome(user_id: str) -> str:
     """Return the user's admission status ("in_progress", "accepted", or "rejected").
 
