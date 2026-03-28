@@ -90,17 +90,34 @@ def get_user_progress(user_id: str) -> dict:
             t for t in tasks if (user_id, t.id) in store.user_task_statuses
         ]
 
-        all_passed = True
-        for task in relevant_tasks:
-            status = store.user_task_statuses.get((user_id, task.id))
-            if status.state == "pending":
-                all_passed = False
-                if current_step is None:
-                    current_step = step
-                    current_task = task
-                break
+        has_passed_conditional = any(
+            t.conditional
+            and store.user_task_statuses.get((user_id, t.id))
+            and store.user_task_statuses[(user_id, t.id)].state == "passed"
+            for t in tasks
+        )
 
-        if all_passed:
+        has_pending_conditional = any(
+            t.conditional
+            and store.user_task_statuses.get((user_id, t.id))
+            and store.user_task_statuses[(user_id, t.id)].state == "pending"
+            for t in tasks
+        )
+
+        step_done = True
+        for task in relevant_tasks:
+            status = store.user_task_statuses[(user_id, task.id)]
+            if status.state == "passed":
+                continue
+            if status.state == "failed" and (has_passed_conditional or has_pending_conditional):
+                continue
+            step_done = False
+            if current_step is None:
+                current_step = step
+                current_task = task
+            break
+
+        if step_done:
             completed_steps.append(step.id)
 
     total_steps = len(steps)
