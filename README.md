@@ -172,7 +172,7 @@ This section outlines the current compromises made for simplicity and the planne
 
 ### 1. Data Persistence
 * **Limitation:** All data (users, task statuses, flow config) currently lives in an in-memory store (`src/db/store.py`). Restarting the server wipes all progress.
-* **Future Improvement:** Replace the in-memory store with a persistent database (e.g., PostgreSQL with SQLAlchemy) to ensure data durability across server restarts.
+* **Future Improvement:** Replace the in-memory store with a persistent database (e.g., PostgreSQL) to ensure data durability across server restarts.
 
 ### 2. Payload Validation & Type Safety
 * **Limitation:** The `PUT /users/{id}/tasks/{task_id}` webhook accepts a generic `dict` body. Missing fields cause silent failures (e.g., a missing `score` defaults to `0`, resulting in immediate rejection) without returning clear validation errors to the client.
