@@ -24,11 +24,12 @@ def complete_task(user_id: str, task_id: str, payload: dict) -> str:
     Steps:
         1. Validate user exists and is not rejected.
         2. Validate task exists and is available for the user.
-        3. If already passed, return early (idempotent).
+        3. If already passed, return passed.
         4. Evaluate pass condition against the payload.
-        5. On failure: mark user as rejected.
-        6. On success: unlock any conditional tasks whose conditions
-           are met, then check if all tasks are passed (→ accepted).
+        5. Try to unlock any conditional tasks whose conditions are met.
+        6. On failure: reject the user only if no conditional task was
+           unlocked (i.e., no second-chance path is available).
+        7. On success: check if all tasks are passed (→ accepted).
 
     Args:
         user_id: The user completing the task.
@@ -44,12 +45,12 @@ def complete_task(user_id: str, task_id: str, payload: dict) -> str:
     """
     user = get_user(user_id)
 
+    if user.status == "rejected":
+        raise HTTPException(status_code=400, detail="User has been rejected")
+
     task = store.tasks.get(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-
-    if user.status == "rejected":
-        raise HTTPException(status_code=400, detail="User has been rejected")
 
     status_key = (user_id, task_id)
     task_status = store.user_task_statuses.get(status_key)
@@ -66,11 +67,12 @@ def complete_task(user_id: str, task_id: str, payload: dict) -> str:
     task_status.state = result
     task_status.completed_at = now
 
-    if result == "failed":
-        user.status = "rejected"
-        return result
+    unlocked = _try_unlock_conditional_tasks(user_id, payload)
 
-    _try_unlock_conditional_tasks(user_id, payload)
+    if result == "failed":
+        if not unlocked:
+            user.status = "rejected"
+        return result
 
     if _all_required_tasks_passed(user_id):
         user.status = "accepted"
@@ -78,12 +80,15 @@ def complete_task(user_id: str, task_id: str, payload: dict) -> str:
     return result
 
 
-def _try_unlock_conditional_tasks(user_id: str, payload: dict) -> None:
+def _try_unlock_conditional_tasks(user_id: str, payload: dict) -> bool:
     """Scan all conditional tasks and unlock any whose condition is met.
 
     Skips tasks that are already unlocked or whose unlock_when condition
     is not recognised (future-proofing).
+
+    Returns True if at least one conditional task was unlocked.
     """
+    unlocked = False
     for step in get_steps_in_order():
         for task in get_tasks_for_step(step.id):
             if not task.conditional or not task.unlock_when:
@@ -94,8 +99,10 @@ def _try_unlock_conditional_tasks(user_id: str, payload: dict) -> None:
                 if should_unlock(task.unlock_when, payload):
                     status = UserTaskStatus(user_id=user_id, task_id=task.id)
                     store.user_task_statuses[(user_id, task.id)] = status
+                    unlocked = True
             except ValueError:
                 continue
+    return unlocked
 
 
 def _all_required_tasks_passed(user_id: str) -> bool:
