@@ -68,9 +68,8 @@ def get_user_progress(user_id: str) -> dict:
     """Compute the user's current position in the admissions flow.
 
     Walks steps in order. The current step is the first step that has
-    at least one relevant pending task. A task is relevant if it is
-    non-conditional, or if it is conditional and has been unlocked for
-    this user (i.e. a UserTaskStatus entry exists).
+    at least one relevant pending task.
+    A task is relevant if a UserTaskStatus entry exists for it.
 
     Returns a dict with keys: current_step, current_task,
     completed_steps, step_number, total_steps.
@@ -88,15 +87,13 @@ def get_user_progress(user_id: str) -> dict:
     for step in steps:
         tasks = get_tasks_for_step(step.id)
         relevant_tasks = [
-            t for t in tasks
-            if not t.conditional
-            or (user_id, t.id) in store.user_task_statuses
+            t for t in tasks if (user_id, t.id) in store.user_task_statuses
         ]
 
         all_passed = True
         for task in relevant_tasks:
             status = store.user_task_statuses.get((user_id, task.id))
-            if not status or status.state != "passed":
+            if status.state != "passed":
                 all_passed = False
                 if current_step is None:
                     current_step = step
