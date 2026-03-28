@@ -127,8 +127,8 @@ Conditional tasks are hidden by default and only unlocked for specific users bas
 ```
 
 Key fields:
-- `conditional: true` — hidden from the default flow, not seeded at user creation.
-- `unlock_when` — the condition key evaluated against the payload to decide whether to unlock this task.
+- `conditional: true` - hidden from the default flow, not seeded at user creation.
+- `unlock_when` - the condition key evaluated against the payload to decide whether to unlock this task.
 
 **Step 2** - Add the unlock condition to `src/evaluators/unlock_condition.py`:
 
@@ -147,7 +147,7 @@ match unlock_when:
 2. `pass_condition.py` evaluates `score_gt_75` → `"failed"`.
 3. `_try_unlock_conditional_tasks` runs and evaluates `score_between_60_75` against the payload → `True`.
 4. A `UserTaskStatus` is created for `retake_iq` (in `"pending"` state).
-5. Because a conditional task was unlocked, the user is **not rejected** — they stay `"in_progress"`.
+5. Because a conditional task was unlocked, the user is **not rejected** - they stay `"in_progress"`.
 6. The user can now complete `retake_iq` with a higher score to continue.
 
 If no conditional task is unlocked on failure (e.g., score < 60), the user is rejected immediately.
@@ -162,7 +162,7 @@ If no conditional task is unlocked on failure (e.g., score < 60), the user is re
 
 1. **Config-driven flow (`flow.json`)**: The admissions flow is defined in a JSON file rather than hardcoded. This makes it easy to add, remove, or reorder steps and tasks without changing application code.
 2. **Single generic webhook endpoint**: All task completions go through one `PUT /users/{id}/tasks/{task_id}` endpoint with a flexible `dict` body, rather than separate endpoints per task. This keeps the API surface small and allows new task types to be added via config alone.
-3. **Evaluator pattern for pass/unlock conditions**: Pass conditions (`pass_condition.py`) and unlock conditions (`unlock_condition.py`) are isolated pure functions using pattern matching. Adding a new condition means adding a single `case` — no other code needs to change.
+3. **Evaluator pattern for pass/unlock conditions**: Pass conditions (`pass_condition.py`) and unlock conditions (`unlock_condition.py`) are isolated pure functions using pattern matching. Adding a new condition means adding a single `case` - no other code needs to change.
 4. **Conditional tasks are lazily unlocked**: Conditional tasks are not seeded at user creation because they only apply to specific users based on runtime data. This avoids cluttering every user's task list with irrelevant tasks.
 5. **Two-endpoint frontend pattern**: `GET /flow` returns the general flow definition (shared across all users) for displaying the overall structure and step names. `GET /users/{id}/progress` returns user-specific progress, including which step and task the user is currently on and any unlocked conditional tasks. A frontend combines both: `/flow` for the layout, `/progress` for highlighting the user's current position.
 
