@@ -144,7 +144,7 @@ class TestSecondChanceConditionalTask:
         complete_task(user_id, "personal_details", {})
         complete_task(user_id, "iq_test", {"score": 65})
 
-        result = complete_task(user_id, "retake_iq", {"score": 80})
+        result = complete_task(user_id, "retake_iq", {"score": 65})
         assert result == "passed"
         assert get_user_outcome(user_id) == "in_progress"
 
