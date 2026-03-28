@@ -8,7 +8,7 @@ Defines four categories of schemas:
 """
 
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 # ---------------------------------------------------------------------------
@@ -94,7 +94,7 @@ class UserTaskStatus(BaseModel):
 
 class CreateUserRequest(BaseModel):
     """Request body for POST /users."""
-    email: str
+    email: EmailStr
 
 
 # ---------------------------------------------------------------------------
@@ -107,7 +107,7 @@ class CreateUserResponse(BaseModel):
 
 
 class TaskInfoResponse(BaseModel):
-    """Lightweight task representation used in API responses."""
+    """Task representation used in API responses."""
     id: str
     name: str
     order: int
@@ -128,7 +128,7 @@ class FlowResponse(BaseModel):
 
 
 class StepSummary(BaseModel):
-    """Lightweight step representation used in progress responses."""
+    """Step representation used in progress responses."""
     id: str
     name: str
     order: int
@@ -159,25 +159,3 @@ class OutcomeResponse(BaseModel):
 class TaskCompletionResponse(BaseModel):
     """Response body for PUT /users/{id}/tasks/{task_id}."""
     task_state: str
-
-
-class UserTaskInfoResponse(BaseModel):
-    """Task representation with user-specific state for GET /users/{id}/flow."""
-    id: str
-    name: str
-    order: int
-    state: str
-
-
-class UserStepInfoResponse(BaseModel):
-    """Step representation with user-specific tasks for GET /users/{id}/flow."""
-    id: str
-    name: str
-    order: int
-    tasks: list[UserTaskInfoResponse] = []
-
-
-class UserFlowResponse(BaseModel):
-    """Response body for GET /users/{id}/flow."""
-    total_steps: int
-    steps: list[UserStepInfoResponse]
