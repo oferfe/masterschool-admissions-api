@@ -173,10 +173,10 @@ All data (users, task statuses, flow config) lives in memory. Restarting the ser
 ### 2. No Migration Strategy for Flow Updates
 There is no mechanism to reconcile existing users' task statuses when the flow changes. In a production system with a persistent database, a migration job would be needed to seed missing task statuses for existing in-progress users whenever the flow is updated.
 
-### 3. The "Empty Step" Edge Case 
-If a flow step contains **only** conditional tasks, it introduces a risk: if a user fails to unlock any of them—whether due to misconfigured unlock conditions or technical issues (e.g., missing user data preventing a condition from being met)—the step effectively becomes empty for that user. In this scenario, the system's logic defaults to `all_passed = True` and automatically marks the step as completed. 
+### 3. The "Conditional-Only Step" Edge Case
+The schema enforces that every step must contain at least one task (`min_length=1`). However, if a step contains **only** conditional tasks, there is still a risk: if a user fails to unlock any of them, the step effectively becomes empty for that user and the system's logic defaults to `all_passed = True`, automatically marking the step as completed.
 
-While our current `flow.json` safely prevents this by including at least one mandatory (non-conditional) task per step to act as an anchor, future configurations must take this into account. This ensures users aren't skipped ahead unintentionally due to flawed flow design or system data errors.
+Our current `flow.json` safely prevents this by including at least one mandatory (non-conditional) task per step to act as an anchor. Future configurations must maintain this pattern to ensure users aren't skipped ahead unintentionally.
 
 ### 4. Untyped Task Payloads — Examples Only, No Validation
 The `PUT /users/{user_id}/tasks/{task_id}` endpoint accepts a generic `dict` body. Swagger UI provides a dropdown with example payloads for each task type (select from the "Examples" dropdown to see the expected fields), but these are **documentation only**. The server does not enforce required fields or validate the payload structure — any JSON object is accepted.
