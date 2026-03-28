@@ -168,7 +168,7 @@ If no conditional task is unlocked on failure (e.g., score < 60), the user is re
 
 ## Known Limitations & Future Improvements
 
-This section outlines the current compromises made for simplicity and the planned architectural upgrades for a production-ready environment.
+This section outlines the current compromises made for simplicity and the planned architectural upgrades for a production environment.
 
 ### 1. Data Persistence
 * **Limitation:** All data (users, task statuses, flow config) currently lives in an in-memory store (`src/db/store.py`). Restarting the server wipes all progress.
@@ -176,15 +176,15 @@ This section outlines the current compromises made for simplicity and the planne
 
 ### 2. Payload Validation & Type Safety
 * **Limitation:** The `PUT /users/{id}/tasks/{task_id}` webhook accepts a generic `dict` body. Missing fields cause silent failures (e.g., a missing `score` defaults to `0`, resulting in immediate rejection) without returning clear validation errors to the client.
-* **Future Improvement:** Implement strict payload validation using typed Pydantic models per task type (with `extra='forbid'`). This will prevent payload pollution and return clear `422 Unprocessable Entity` errors for invalid inputs.
+* **Future Improvement:** Implement strict payload validation using typed Pydantic models per task type.
 
 ### 3. Flow Updates & Migrations
 * **Limitation:** There is no mechanism to reconcile existing users' task statuses if `config/flow.json` is modified while users are midway through the flow.
-* **Future Improvement:** Develop a flow migration strategy to seamlessly update existing in-progress users when the blueprint changes (e.g., seeding missing statuses for new tasks or cleaning up orphaned ones).
+* **Future Improvement:** Create a safe way to update users who are currently in the middle of the process when the flow.json changes. (e.g., automatically adding new tasks to their profile, or safely ignoring deleted ones).
 
 ### 4. Fully Data-Driven Evaluators
 * **Limitation:** Currently, adding a new pass or unlock condition requires modifying the `match/case` branches in the Python evaluator files.
-* **Future Improvement:** Implement generic pass conditions evaluated dynamically directly from `flow.json` (e.g., `{"field": "score", "operator": ">", "value": 75}`). This would make the system 100% config-driven, eliminating the need for any Python code changes when introducing new rules.
+* **Future Improvement:** Implement generic pass conditions evaluated dynamically directly from `flow.json` (e.g., `{"field": "score", "operator": ">", "value": 75}`).
 
 ### 5. The "Conditional-Only Step" Edge Case
 * **Limitation:** If a flow step contains *only* conditional tasks and a user fails to unlock any of them, the system logic defaults to `all_passed = True`, effectively skipping the step and pushing the user forward unintentionally.
