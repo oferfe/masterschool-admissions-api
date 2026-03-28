@@ -13,7 +13,7 @@
     "order": 2,
     "tasks": [
       { "id": "iq_test", "name": "IQ Test", "order": 1, "pass_condition": "score_gt_75" },
-      { "id": "retake_iq", "name": "Retake IQ Test", "order": 2, "pass_condition": "score_gt_75", "conditional": true, "unlock_when": "score_between_60_75" }
+      { "id": "retake_iq", "name": "Retake IQ Test", "order": 2, "pass_condition": "score_between_60_75", "conditional": true, "unlock_when": "score_between_60_75" }
     ]
   },
   {
