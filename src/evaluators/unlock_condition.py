@@ -24,5 +24,8 @@ def should_unlock(unlock_when: str, payload: dict) -> bool:
         ValueError: If the unlock_when condition is not recognised.
     """
     match unlock_when:
+        case "score_between_60_75":
+            score = payload.get("score", 0)
+            return 60 <= score <= 75
         case _:
             raise ValueError(f"Unknown unlock condition: {unlock_when}")
